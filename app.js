@@ -2,6 +2,8 @@ const express = require('express');
 
 const app = express();
 
+const feedRoutes = require("./routes/feed");
 
+app.use("/feed", feedRoutes);
 
-aapp.listen(8001)
+app.listen(8001)
