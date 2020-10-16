@@ -1,34 +1,56 @@
 const { validationResult } = require('express-validator/check');
 const Post = require('../models/post')
 exports.getPosts = (req, res, next) => {
-    res.status(200).json({
-        posts: [{
-            _id: '1',
-            title: 'First Post',
-            content: 'This is the first post!',
-            imageUrl: 'images/ace.jpg',
-            creator: {
-                name: 'Tarun'
-            },
-            createdAt: new Date(),
-        }],
-        totaltems: 1
+  Post.find()
+    .then((posts) => {
+      res.status(200).json({
+        message: "Posts fetched",
+        posts,
+        totalCount: posts.length
+      });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
     });
 }
+exports.getPost = (req, res, next) => {
+  const postId = req.params.postId;
+  Post.findById(postId)
+    .then(post => {
+      if (!post) {
+        const error = new Error('Could not find post.')
+        error.statusCode = 404;
+        throw error;
+      }
+      res.status(200).json({
+        message: 'Post fetched',
+        post,
+      })
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
 exports.createPost = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(422).json({
-      message: 'Vaalidation failed, entered stts is incorrect',
-      errors: errors.array(),
-    })
+    const error = new Error('Validation failed, entered stts is incorrect');
+    error.statusCode = 422;
+    error.errors = errors.array();
+    throw error;
   }
   const title = req.body.title;
   const content = req.body.content;
   const post = new Post({
     title,
     content,
-    imageUrl: "images/ace.jpg",
+    imageUrl: "/images/ace.jpg",
     creator: {
       name: "Tarun",
     },
@@ -42,7 +64,10 @@ exports.createPost = (req, res, next) => {
         });
     })
     .catch(err => {
-    console.log(err);
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+    next(err);
   })
 
 };
