@@ -19,6 +19,15 @@ exports.postPost = (req, res, next) => {
     console.log({title, content})
   res.status(201).json({
     message: "Post created successfully",
-    post: { id: new Date().toISOString(), title, content },
+    post: {
+      _id: new Date().toISOString(),
+      title,
+      content,
+      imageUrl: "images/ace.jpg",
+      creator: {
+        name: "Tarun",
+      },
+      createdAt: new Date(),
+    },
   });
 };
