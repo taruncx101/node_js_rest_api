@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const User = require('../modes/user')
+const User = require('../models/user')
 
 const { body } = require("express-validator");
 
@@ -23,7 +23,7 @@ router.put(
           .normalizeEmail(),
       body('name')
           .trim()
-           .isEmpty(),
+           .notEmpty(),
 
     body(
       "password",
@@ -31,15 +31,6 @@ router.put(
     )
       .isLength({ min: 5 })
       .trim(),
-
-    body("confirmPassword")
-      .trim()
-      .custom((value, { req }) => {
-        if (value !== req.body.password) {
-          throw new Error("Passwords have to match!");
-        }
-        return true;
-      }),
   ],
   authController.postSignUp
 );
