@@ -43,8 +43,10 @@ app.use((req, res, next) => {
 });
 
 const feedRoutes = require("./routes/feed");
+const authRoutes = require("./routes/auth");
 
 app.use("/feed", feedRoutes);
+app.use("/auth", authRoutes);
 
 app.use((err, req, res, next) => {
     console.log(err)
