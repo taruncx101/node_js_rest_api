@@ -1,21 +1,22 @@
 const { validationResult } = require('express-validator/check');
-const Post = require('../models/post')
 const fs = require('fs');
 const path = require('path');
-const post = require('../models/post');
+const Post = require('../models/post');
+const User = require('../models/user')
 
 exports.getPosts = (req, res, next) => {
   const currentPage = req.query.page || 1
   const perPage = 2;
   let totalItems;
-  post.find()
+  Post.find()
     .countDocuments()
-    .then(count => {
+    .then((count) => {
       totalItems = count;
       return Post.find()
+        .populate("creator")
         .skip((currentPage - 1) * perPage)
         .limit(perPage);
-  })
+    })
     .then((posts) => {
       res.status(200).json({
         message: "Posts fetched",
@@ -53,6 +54,7 @@ exports.getPost = (req, res, next) => {
 };
 exports.createPost = (req, res, next) => {
   const errors = validationResult(req);
+  let createdPost;
   if (!errors.isEmpty()) {
     const error = new Error('Validation failed, entered data is incorrect');
     error.statusCode = 422;
@@ -73,17 +75,24 @@ exports.createPost = (req, res, next) => {
     title,
     content,
     imageUrl,
-    creator: {
-      name: "Tarun",
-    },
+    creator: req.userId,
   });
   post.save()
     .then(result => {
-      console.log(result);
-        res.status(201).json({
-          message: "Post created successfully",
-          post: result,
-        });
+      createdPost = result; 
+        return User.findById(req.userId);
+
+    })
+    .then(user => {
+      createdPost.creator = user;
+      user.posts.push(createdPost);
+      return user.save();
+    })
+  .then(user => {
+              res.status(201).json({
+                message: "Post created successfully",
+                post: createdPost,
+              });
     })
     .catch(err => {
       if (!err.statusCode) {
@@ -133,7 +142,6 @@ exports.updatePost = (req, res, next) => {
       return post.save();
     })
     .then((result) => {
-      console.log(result);
       res.status(200).json({
         message: "Post updated successfully",
         post: result,
